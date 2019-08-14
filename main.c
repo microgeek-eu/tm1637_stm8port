@@ -182,7 +182,7 @@ void KeyboardCallback(uint8_t code)
   * @param   None
   * @retval  None
   */
-void TIM2_UPD_OVF_BRK_IRQHandler() __interrupt(13)
+void TIM1_UPD_OVF_BRK_IRQHandler() __interrupt(11)
 {
   TM_ISR();
   TIM1_ClearITPendingBit(TIM1_IT_UPDATE);
