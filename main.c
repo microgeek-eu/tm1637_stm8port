@@ -13,7 +13,10 @@
 
 
 /*- Private definitions ---------------------------------*/
-#define F_CPU     16000000  /* 16MHz clock               */
+#ifndef F_CPU
+#define F_CPU     16000000UL/* 16MHz clock               */
+#endif /* F_CPU */
+
 #define PRESCALE  1600      /* Initial TIMER divider     */
 #define PERIOD    1000      /* Key scan per 100ms        */
 #define AUTO_OCR  ((F_CPU / PRESCALE / PERIOD) - 1)
