@@ -62,6 +62,17 @@
 #define TM_DIGIT_VALUE_F    15
 #define TM_DIGIT_VALUE_OFF  16
 
+/*
+ * @brief   Custom digit elements
+ */
+#define TM_CUSTOM_SEGMENT_A		0x01
+#define TM_CUSTOM_SEGMENT_B		0x02
+#define TM_CUSTOM_SEGMENT_C		0x04
+#define TM_CUSTOM_SEGMENT_D		0x08
+#define TM_CUSTOM_SEGMENT_E		0x10
+#define TM_CUSTOM_SEGMENT_F		0x20
+#define TM_CUSTOM_SEGMENT_G		0x40
+#define TM_CUSTOM_SEGMENT_DP	0x80
 
 /*
  * @brief   Prototype of pointer to the callback function
@@ -70,21 +81,77 @@ typedef void (*OnPress)(uint8_t);
 
 
 /*
- * @brief   Decimal point state typedef
+ * @brief   Character type
  */
 typedef enum {
-  TM_DP_off = 0,  /* Decimal point is disabled */
-  TM_DP_on        /* Decimal point is enabled  */
+  TM_CHAR_REGULAR,  /* Regular character */
+  TM_CHAR_WITH_DP,  /* Regular character with decimal point enabled */
+  TM_CHAR_CUSTOM    /* Custom character made from
+                     * TM_CUSTOM_SEGMENT_x elements
+                     * */
 } TM_DP_StateType;
 
 
-
+/*
+ * @brief  MCU pins initialization
+ * @param  none
+ * @retval none
+ */
 void TM_Init(void);
+
+/*
+ * @brief  Attach callback function
+ * @param  pointer to the void fun(uint8_t) function prototype
+ * @retval none
+ */
 void TM_RegisterKeyboardCallback(OnPress cb);
-void TM_SetDigit(uint8_t digit, uint8_t value, TM_DP_StateType dp);
+
+/*
+ * @brief  Function sets new digit on selected position.
+ * @param  digit - selected digit (0 to 5)
+ * @param  value - new value (0 to 16 or TM_DIGIT_VALUE_x) for
+ *          selected digit or custom character bitmap made from
+ *          TM_CUSTOM_SEGMENT_x elements
+ * @param  character_type:
+ *          @TM_CHAR_REGULAR  treats parameter value as regular
+ *                            value to display (from 0h to Ah or off),
+ *          @TM_CHAR_WITH_DP  treats parameter value as regular value
+ *                            with decimal point enabled (from 0h to Ah
+ *                            or off but DP is on),
+ *          @TM_CHAR_CUSTOM   treats parameter value as custom bitmap
+ *                            made from TM_CUSTOM_SEGMENT_x elements
+ * @retval none
+ */
+void TM_SetDigit(uint8_t digit, uint8_t value, TM_DP_StateType character_type);
+
+/*
+ * @brief  Sets digits brightness.
+ * @param  duty - from 0 (display off) to 8 (display duty cycle 14/16)
+ * @retval none
+ * */
 void TM_SetDuty(uint8_t duty);
+
+/*
+ * @brief  Reads keyboard state.
+ * @param  none
+ * @retval key code or 0x00 when no key is pressed
+ */
 uint8_t TM_GetKeys(void);
+
+/*
+ * @brief  Automatic keyboard check & call (if registered) callback
+ *         function.
+ * @param  none
+ * @retval none
+ */
 void TM_Task(void);
+
+/*
+ * @brief  Function which must be called periodically (ie. by interrupt
+ *         subroutine) when TM_Task being used.
+ * @param  none
+ * @retval none
+ */
 void TM_ISR(void);
 
 #endif /* TM1637_H_ */

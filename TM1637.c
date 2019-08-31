@@ -118,9 +118,9 @@ static void TM_write(uint8_t *msg, uint8_t len)
 
 
 /*
- * @brief   MCU pins initialization
- * @param   none
- * @retval  none
+ * @brief  MCU pins initialization
+ * @param  none
+ * @retval none
  */
 void TM_Init(void)
 {
@@ -133,23 +133,37 @@ void TM_Init(void)
 
 
 /*
- * @brief   Put a single digit at desired position.
- *          As an option dot point can be enabled
- * @param   digit : selected digit (0 to 5)
- * @param   value : new value (0 to 9)  for selected digit
- * @param   dp    : new state of decimal point for selected digit
- * @retval  none
+ * @brief  Function sets new digit on selected position.
+ * @param  digit - selected digit (0 to 5)
+ * @param  value - new value (0 to 16 or TM_DIGIT_VALUE_x) for
+ *          selected digit or custom character bitmap made from
+ *          TM_CUSTOM_SEGMENT_x elements
+ * @param  character_type:
+ *          @TM_CHAR_REGULAR  treats parameter value as regular
+ *                            value to display (from 0h to Ah or off),
+ *          @TM_CHAR_WITH_DP  treats parameter value as regular value
+ *                            with decimal point enabled (from 0h to Ah
+ *                            or off but DP is on),
+ *          @TM_CHAR_CUSTOM   treats parameter value as custom bitmap
+ *                            made from TM_CUSTOM_SEGMENT_x elements
+ * @retval none
  */
-void TM_SetDigit(uint8_t digit, uint8_t value, TM_DP_StateType dp)
+void TM_SetDigit(uint8_t digit, uint8_t value, TM_DP_StateType character_type)
 {
   uint8_t command = TM_WRITE_INCR;
   uint8_t msg[2];
 
   msg[0] = TM_BASE_ADDR + digit;
-  msg[1] = digits[value];
 
-  if(dp == TM_DP_on) {
-    msg[1] |= (1 << 7); // dp segment is connected to the msb bit
+  if(character_type != TM_CHAR_CUSTOM) {
+    msg[1] = digits[value]; /* Load bitmap from LUT */
+
+    if(character_type == TM_CHAR_WITH_DP) {
+      msg[1] |= (1 << 7);   /* Enable decimal point */
+    }
+  }
+  else {
+    msg[1] = value;         /* Insert raw bitmap    */
   }
 
   TM_write(&command, sizeof(command));
@@ -158,9 +172,9 @@ void TM_SetDigit(uint8_t digit, uint8_t value, TM_DP_StateType dp)
 
 
 /*
- * @brief    Sets digits brightness.
- * @param    duty : from 0 (display off) to 8 (display duty cycle 14/16)
- * @retval   none
+ * @brief  Sets digits brightness.
+ * @param  duty - from 0 (display off) to 8 (display duty cycle 14/16)
+ * @retval none
  * */
 void TM_SetDuty(uint8_t duty)
 {
@@ -175,9 +189,9 @@ void TM_SetDuty(uint8_t duty)
 
 
 /*
- * @brief   Reads keyboard state.
- * @param   none
- * @retval  Key code or 0x00 when no key is pressed
+ * @brief  Reads keyboard state.
+ * @param  none
+ * @retval key code or 0x00 when no key is pressed
  */
 uint8_t TM_GetKeys(void)
 {
@@ -189,7 +203,7 @@ uint8_t TM_GetKeys(void)
   TM_ack();
 
   TM_DIO_IN;
-  for (uint8_t i = 0; i < 8; ++i) {
+  for(uint8_t i = 0; i < 8; ++i) {
     TM_CLK_LOW;
     data >>= 1;
     DELAY_US(2);
@@ -209,9 +223,10 @@ uint8_t TM_GetKeys(void)
 
 
 /*
- * @brief   Automatic keyboard check & call (if registered) callback function.
- * @param   none
- * @retval  none
+ * @brief  Automatic keyboard check & call (if registered) callback
+ *         function.
+ * @param  none
+ * @retval none
  */
 void TM_Task(void)
 {
@@ -234,10 +249,10 @@ void TM_Task(void)
 
 
 /*
- * @brief   Function which must be called periodically (ie. by interrupt
- *          subroutine) when TM_Task being used.
- * @param   none
- * @retval  none
+ * @brief  Function which must be called periodically (ie. by interrupt
+ *         subroutine) when TM_Task being used.
+ * @param  none
+ * @retval none
  */
 void TM_ISR(void)
 {
@@ -246,9 +261,9 @@ void TM_ISR(void)
 
 
 /*
- * @brief   Attach callback function
- * @param   cb : pointer to the void fun(uint8_t) function prototype
- * @retval  none
+ * @brief  Attach callback function
+ * @param  pointer to the void fun(uint8_t) function prototype
+ * @retval none
  */
 void TM_RegisterKeyboardCallback(OnPress cb)
 {
